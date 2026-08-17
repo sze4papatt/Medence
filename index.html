@@ -36,26 +36,141 @@
             color: #1a365d;
             font-size: 1.2rem;
             margin-bottom: 10px;
+            border-bottom: 2px solid #3182ce;
+            padding-bottom: 6px;
+        }
+
+        h2 {
+            font-size: 0.95rem;
+            color: #2b6cb0;
+            margin-top: 14px;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 4px;
+        }
+
+        .params-block, .info-box {
+            background: rgba(235, 248, 255, 0.85);
+            border-left: 4px solid #3182ce;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .params-block p, .info-box p { margin: 2px 0; }
+
+        .input-group { margin-bottom: 8px; }
+
+        label {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 0.85rem;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background-color: #fff;
+        }
+
+        .recommendation {
+            font-weight: 600;
+            margin-top: 5px;
             padding: 8px;
             border-radius: 6px;
             display: none;
             font-size: 0.82rem;
             line-height: 1.35;
+        }
+
+        .recommend-warn { background-color: #fff5f5; color: #c53030; border: 1px solid #feb2b2; }
+        .recommend-ok { background-color: #f0fff4; color: #276749; border: 1px solid #9ae6b4; }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: bold;
+            margin-top: 6px;
+        }
+
+        .btn-green { background-color: #38a169; }
+        .btn-red { background-color: #e53e3e; }
+        .btn-purple { background-color: #805ad5; }
+
+        #save-status {
+            text-align: center;
+            margin-top: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #2f855a;
+        }
+
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0 0 0;
             max-height: 140px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            padding: 6px 8px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 0.78rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-date { color: #718096; font-size: 0.72rem; }
+        .clear-btn {
+            background: transparent;
+            border: none;
+            color: #e53e3e;
+            cursor: pointer;
+            font-size: 0.75rem;
+            text-decoration: underline;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <h1>🏊‍♂️ Medence Kezelés & Napló</h1>
+
+    <div class="params-block">
         <p><strong>Víztérfogat:</strong> 30.8 m³ (~31 000 liter)</p>
         <p><strong>Alapkezelés:</strong> Klór Kombi tabletta</p>
     </div>
 
     <h2>📊 Mérés & Kanál-Adagoló</h2>
     <div class="input-group">
-        <label for="pH-value">Mért pH érték (Cél: 7,2 - 7,4):</label>
-        <input type="number" id="pH-value" step="0.1" placeholder="Pl. 7.8">
+        <label for="pH-value">Mért pH érték (Optimális: 7,4 - 7,6):</label>
+        <input type="number" id="pH-value" step="0.1" placeholder="Pl. 8.2">
         <div class="recommendation" id="pH-recommend"></div>
     </div>
 
     <div class="input-group">
         <label for="cl-value">Mért Klór érték (Cél: 0,8 - 1,5 ppm):</label>
-        <input type="number" id="cl-value" step="0.1" placeholder="Pl. 0.3">
+        <input type="number" id="cl-value" step="0.1" placeholder="Pl. 0.5">
         <div class="recommendation" id="cl-recommend"></div>
     </div>
 
@@ -80,8 +195,8 @@
     <div class="input-group">
         <select id="custom-chem">
             <option value="Kombi tabletta (1 db)">Kombi tabletta (1 db)</option>
-            <option value="pH-mínusz (310g / 5 kanál)">pH-mínusz (310g / 5 kanál)</option>
-            <option value="pH-mínusz (620g / 10 kanál)">pH-mínusz (620g / 10 kanál)</option>
+            <option value="pH-mínusz (300g / ~5 kanál)">pH-mínusz (300g / ~5 kanál)</option>
+            <option value="pH-mínusz (600g / ~10 kanál)">pH-mínusz (600g / ~10 kanál)</option>
             <option value="Gyorsaklór pótlás (120g / 2 kanál)">Gyorsaklór pótlás (120g / 2 kanál)</option>
             <option value="Pelyhesítő (Flokkuláló)">Pelyhesítő (Flokkuláló)</option>
             <option value="Szűrőmosás / Backwash">Szűrőmosás / Backwash</option>
@@ -99,7 +214,6 @@
 
 <script>
     const poolVolumeM3 = 30.8;
-    const spoonGramms = 60; // 1 teli lapos kanál = 60 gramm
 
     const phInput = document.getElementById('pH-value');
     const clInput = document.getElementById('cl-value');
@@ -112,48 +226,33 @@
     phInput.addEventListener('input', calculatePhRecommend);
     clInput.addEventListener('input', calculateClRecommend);
 
-    // KANÁL SZÁMÍTÁS pH-HOZ:
-    // 30.8 m³-nél 0.1 pH csökkentéshez ~310 g pH-mínusz kell
+    // pH SZÁMÍTÁS (8.2-ről 7.5-re ~18 kanál / 1080g a te tapasztalatod alapján):
     function calculatePhRecommend() {
         const ph = parseFloat(phInput.value);
         if (isNaN(ph)) { phRecommend.style.display = 'none'; return; }
         phRecommend.style.display = 'block';
 
-        if (ph > 7.4) {
-            const diff = ph - 7.3; // 7.3 célra számolunk
-            const steps = diff / 0.1;
-            const totalGramms = Math.round(steps * 310);
-            const flatSpoons = (totalGramms / 60).toFixed(1); // lapos kanál (60g)
-            const heapedSpoons = (totalGramms / 70).toFixed(1); // púpozott kanál (70g)
+        if (ph > 7.6) {
+            const diff = ph - 7.5; // Optimális 7.5 cél
+            const totalGramms = Math.round((diff / 0.1) * 150);
+            const flatSpoons = Math.round(totalGramms / 60);
 
             phRecommend.className = "recommendation recommend-warn";
             phRecommend.innerHTML = `⚠️ <strong>pH csökkentés szükséges!</strong><br>
+            • Cél érték: <strong>7,5 pH</strong> (Ideális: 7,4 – 7,6)<br>
             • Szükséges: <strong>~${totalGramms} g</strong> pH-mínusz<br>
-            • Mérőkanállal: <strong>${flatSpoons} lapos kanál</strong> (vagy ${heapedSpoons} púpozott kanál)`;
+            • Adagolás: <strong>~${flatSpoons} lapos kanál</strong> (60g/kanál)`;
         } else if (ph < 7.2) {
             phRecommend.className = "recommendation recommend-warn";
             phRecommend.innerHTML = `⚠️ <strong>Alacsony pH!</strong> Add hozzá a szükséges pH-plusz granulátumot.`;
         } else {
             phRecommend.className = "recommendation recommend-ok";
-            phRecommend.innerHTML = `✅ <strong>A pH érték tökéletes (7,2 - 7,4)!</strong>`;
+            phRecommend.innerHTML = `✅ <strong>A pH érték tökéletes (7,4 - 7,6)!</strong>`;
         }
     }
 
-    // KANÁL SZÁMÍTÁS KLÓRHOZ:
-    function calculateClRecommend() {
-        const cl = parseFloat(clInput.value);
-        if (isNaN(cl)) { clRecommend.style.display = 'none'; return; }
-        clRecommend.style.display = 'block';
-
-        if (cl < 0.8) {
-            clRecommend.className = "recommendation recommend-warn";
-            clRecommend.innerHTML = `⚠️ <strong>Alacsony klórszint!</strong><br>
-            • Gyorsaklór pótlás: <strong>120 g</strong> (kb. <strong>2 teli kanál</strong>)<br>
-            • Vagy végezz egy teljes <strong>Klórsokkot</strong>!`;
-        } else if (cl > 1.5) {
-            clRecommend.className = "recommendation recommend-warn";
-            clRecommend.innerHTML = `⚠️ <strong>Klór túl magas (>1.5 ppm)!</strong> Vedd ki a kombi tablettát egy időre.`;
-            const CACHE_NAME = 'medence-app-v3';
+    // KLÓR SZÁMÍTÁS:
+            const CACHE_NAME = 'medence-app-v4';
             const ASSETS = ['./', 'index.html', 'pool_bg.png'];
 
             self.addEventListener('install', (e) => {
