@@ -2,44 +2,39 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Medence Kezelés & Napló</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        html, body {
-            width: 100%;
-            min-height: 100vh;
-            background-color: #0288d1;
-        }
-
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 10px;
             background-image: url('pool_bg.png');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 12px;
         }
 
         #app-container {
-            background-color: rgba(255, 255, 255, 0.96);
+            background-color: rgba(255, 255, 255, 0.95);
             padding: 16px;
             border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
             width: 100%;
             max-width: 400px;
             backdrop-filter: blur(8px);
-            margin: 0 auto;
+            margin: 0 auto 20px auto;
         }
 
         h1 {
             text-align: center;
             color: #1a365d;
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             margin-bottom: 10px;
             border-bottom: 2px solid #3182ce;
             padding-bottom: 6px;
@@ -55,7 +50,7 @@
         }
 
         .params-block, .info-box {
-            background: rgba(235, 248, 255, 0.9);
+            background: rgba(235, 248, 255, 0.85);
             border-left: 4px solid #3182ce;
             padding: 8px 10px;
             border-radius: 6px;
@@ -71,7 +66,6 @@
         .row-inputs {
             display: flex;
             gap: 10px;
-            width: 100%;
         }
 
         .row-inputs .input-group {
@@ -88,20 +82,20 @@
 
         input[type="number"], select {
             width: 100%;
-            padding: 10px;
+            padding: 8px;
             border: 1px solid #cbd5e0;
-            border-radius: 8px;
-            font-size: 0.95rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
             background-color: #fff;
         }
 
         .recommendation {
             font-weight: 600;
-            margin-top: 6px;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            line-height: 1.4;
+            margin-top: 5px;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            line-height: 1.35;
         }
 
         .recommend-warn { background-color: #fff5f5; color: #c53030; border: 1px solid #feb2b2; }
@@ -110,16 +104,15 @@
         .btn {
             display: block;
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             background-color: #3182ce;
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: bold;
-            margin-top: 8px;
-            text-align: center;
+            margin-top: 6px;
         }
 
         .btn-green { background-color: #38a169; }
@@ -129,7 +122,7 @@
         #save-status {
             text-align: center;
             margin-top: 6px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 600;
             color: #2f855a;
         }
@@ -138,29 +131,29 @@
             list-style: none;
             padding: 0;
             margin: 8px 0 0 0;
-            max-height: 150px;
+            max-height: 140px;
             overflow-y: auto;
         }
 
         .history-item {
             background: #f7fafc;
             border: 1px solid #e2e8f0;
-            padding: 8px;
+            padding: 6px 8px;
             border-radius: 6px;
             margin-bottom: 4px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .history-date { color: #718096; font-size: 0.75rem; }
+        .history-date { color: #718096; font-size: 0.72rem; }
         .clear-btn {
             background: transparent;
             border: none;
             color: #e53e3e;
             cursor: pointer;
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             text-decoration: underline;
             float: right;
         }
@@ -190,7 +183,7 @@
     </div>
     <div class="recommendation" id="pH-recommend"></div>
 
-    <div class="input-group" style="margin-top: 8px;">
+    <div class="input-group" style="margin-top: 6px;">
         <label for="cl-value">Mért Klór érték (Cél: 0,8 - 1,5 ppm):</label>
         <input type="number" id="cl-value" step="0.1" placeholder="Pl. 0.5">
         <div class="recommendation" id="cl-recommend"></div>
@@ -235,6 +228,8 @@
 </div>
 
 <script>
+    const poolVolumeM3 = 30.8;
+
     const phInput = document.getElementById('pH-value');
     const targetPhInput = document.getElementById('target-pH');
     const clInput = document.getElementById('cl-value');
@@ -395,6 +390,29 @@
     }
 
     window.onload = loadSavedData;
+
+    if ('serviceWorker' in navigator) {
+        const swCode = `
+            const CACHE_NAME = 'medence-app-v8';
+            const ASSETS = ['./', 'index.html', 'pool_bg.png'];
+
+            self.addEventListener('install', (e) => {
+                e.waitUntil(
+                    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+                );
+            });
+
+            self.addEventListener('fetch', (e) => {
+                e.respondWith(
+                    caches.match(e.request).then((response) => response || fetch(e.request))
+                );
+            });
+        `;
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const workerUrl = URL.createObjectURL(blob);
+
+        navigator.serviceWorker.register(workerUrl).catch(() => {});
+    }
 </script>
 
 </body>
