@@ -78,6 +78,100 @@
             font-weight: 600;
             color: #4a5568;
             font-size: 0.82rem;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background-color: #fff;
+        }
+
+        .recommendation {
+            font-weight: 600;
+            margin-top: 5px;
+            padding: 8px;
+            border-radius: 6px;
+            display: none;
+            font-size: 0.82rem;
+            line-height: 1.35;
+        }
+
+        .recommend-warn { background-color: #fff5f5; color: #c53030; border: 1px solid #feb2b2; }
+        .recommend-ok { background-color: #f0fff4; color: #276749; border: 1px solid #9ae6b4; }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: bold;
+            margin-top: 6px;
+        }
+
+        .btn-green { background-color: #38a169; }
+        .btn-red { background-color: #e53e3e; }
+        .btn-purple { background-color: #805ad5; }
+
+        #save-status {
+            text-align: center;
+            margin-top: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #2f855a;
+        }
+
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0 0 0;
+            max-height: 140px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            padding: 6px 8px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 0.78rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-date { color: #718096; font-size: 0.72rem; }
+        .clear-btn {
+            background: transparent;
+            border: none;
+            color: #e53e3e;
+            cursor: pointer;
+            font-size: 0.75rem;
+            text-decoration: underline;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <h1>🏊‍♂️ Medence Kezelés & Napló</h1>
+
+    <div class="params-block">
+        <p><strong>Víztérfogat:</strong> 30.8 m³ (~31 000 liter)</p>
+        <p><strong>Alapkezelés:</strong> Klór Kombi tabletta</p>
+    </div>
+
+    <h2>📊 Mérés & Kanál-Adagoló</h2>
+    
     <div class="row-inputs">
         <div class="input-group">
             <label for="pH-value">Mért pH:</label>
@@ -204,6 +298,72 @@
         
         if (phInput.value || clInput.value) {
             logAction(`Mérés: pH ${phInput.value || '-'} (Cél: ${targetPhInput.value}) | CL ${clInput.value || '-'} ppm`);
+        }
+        showStatus("Mérések elmentve!");
+    }
+
+    function logAction(actionName) {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        if (actionName.includes('Algastop')) {
+            localStorage.setItem('lastAlgaTreatment', now.toISOString());
+            updateAlgaStatus(now, now);
+        }
+
+        let history = JSON.parse(localStorage.getItem('poolHistory') || '[]');
+        history.unshift({ action: actionName, date: dateStr });
+        
+        if (history.length > 30) history.pop();
+
+        localStorage.setItem('poolHistory', JSON.stringify(history));
+        renderHistory();
+        showStatus(`Rögzítve: ${actionName}`);
+    }
+
+    function logCustom() {
+        const select = document.getElementById('custom-chem');
+        logAction(select.value);
+    }
+
+    function renderHistory() {
+        let history = JSON.parse(localStorage.getItem('poolHistory') || '[]');
+        historyList.innerHTML = '';
+
+        if (history.length === 0) {
+            historyList.innerHTML = '<li style="text-align:center; color:#a0aec0; font-size:0.8rem; padding:8px;">Még nincs rögzített esemény.</li>';
+            return;
+        }
+
+        history.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            li.innerHTML = `<span><strong>${item.action}</strong></span> <span class="history-date">${item.date}</span>`;
+            historyList.appendChild(li);
+        });
+    }
+
+    function clearHistory() {
+        if (confirm("Biztosan törölni akarod a naplót?")) {
+            localStorage.removeItem('poolHistory');
+            renderHistory();
+        }
+    }
+
+    function updateAlgaStatus(treatmentDate, referenceDate) {
+        const formattedDate = treatmentDate.toLocaleDateString('hu-HU');
+        const timeDiff = referenceDate.getTime() - treatmentDate.getTime();
+        const diffDays = Math.floor(timeDiff / (1000 * 3600 * 24)); 
+
+        if (diffDays >= 7) {
+            algaStatus.innerHTML = `Utolsó Algastop: <strong>${formattedDate}</strong> (${diffDays} napja).<br><span style="color: #e53e3e; font-weight: bold;">⚠️ Eltelt 1 hét! Algastop esedékes!</span>`;
+        } else {
+            algaStatus.innerHTML = `Utolsó Algastop: <strong>${formattedDate}</strong>.<br><span style="color: #2f855a;">Következő adag ${7 - diffDays} nap múlva esedékes.</span>`;
+        }
+    }
+
+    function loadSavedData() {
+        const savedPH = localStorage.getItem('lastPH');
         const savedTargetPH = localStorage.getItem('targetPH');
         const savedCL = localStorage.getItem('lastCL');
         
